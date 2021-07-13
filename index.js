@@ -10,19 +10,7 @@ class Book {
 //UI Class : Handles UI Tasks
 class UI {
   static displayBooks() {
-    const StoredBooks = [
-      {
-        title: "The Alchemist",
-        author: "‎Paulo Coelho",
-        isbn: "123456",
-      },
-      {
-        title: "Rich dad poor dad",
-        author: "‎Robert T.Kiyosaki",
-        isbn: "1234567",
-      },
-    ];
-    const books = StoredBooks;
+    const books = Store.getBooks();
     books.forEach((book) => UI.addBookToList(book));
   }
 
@@ -65,8 +53,37 @@ class UI {
     setTimeout(() => document.querySelector(".alert").remove(), 3000);
   }
 }
-//Store Class : Handles Storage
 
+//Store Class : Handles Storage
+class Store {
+  static getBooks() {
+    let books;
+    if (localStorage.getItem("books") === null) {
+      books = [];
+    } else {
+      books = JSON.parse(localStorage.getItem("books"));
+    }
+    return books;
+  }
+
+  static addBook(book) {
+    const books = Store.getBooks();
+    books.push(book);
+    //we need to stringify the object before storing into the localstorage
+    localStorage.setItem("books", JSON.stringify(books));
+  }
+
+  static removeBook(isbn) {
+    const books = Store.getBooks();
+    books.forEach((book, index) => {
+      if (book.isbn === isbn) {
+        books.splice(index, 1);
+        console.log("deleted");
+      }
+    });
+    localStorage.setItem("books", JSON.stringify(books));
+  }
+}
 //Event : Display Books
 document.addEventListener("DOMContentLoaded", UI.displayBooks);
 
@@ -89,6 +106,9 @@ document.querySelector("#book-form").addEventListener("submit", (e) => {
     //Add book to UI
     UI.addBookToList(book);
 
+    //Store book to localstorage
+    Store.addBook(book);
+
     //show success message
     UI.showAlert("Successfully added the book", "success");
 
@@ -102,6 +122,10 @@ document.querySelector("#book-list").addEventListener("click", (e) => {
   //console.log(e.target);
 
   UI.deleteBook(e.target);
+  //console.log(e.target.parentElement.previousElementSibling.textContent);
+
+  //delete book from localstorage
+  Store.removeBook(e.target.parentElement.previousElementSibling.textContent);
 
   //show success message
   UI.showAlert("Successfully deleted the book", "success");
